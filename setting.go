@@ -76,10 +76,10 @@ func Get(key string, def interface{}) (val interface{}) {
 	return val
 }
 
-func Has(key string) bool {
-	_, ok := instance.data[key]
-
-	return ok
+func Has(key string) (bool, error) {
+	if _, ok := instance.data[key]; !ok {
+		return false, ErrKeyNotFound
+	}
 }
 
 func GetAll() map[string]interface{} {
