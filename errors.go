@@ -6,5 +6,5 @@ import (
 
 
 var (
-	ErrKeyNotFound = errors.new("setting: key not found")
+	ErrKeyNotFound = errors.New("setting: key not found")
 )

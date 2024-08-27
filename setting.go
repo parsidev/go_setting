@@ -80,6 +80,8 @@ func Has(key string) (bool, error) {
 	if _, ok := instance.data[key]; !ok {
 		return false, ErrKeyNotFound
 	}
+
+	return true, nil
 }
 
 func GetAll() map[string]interface{} {
