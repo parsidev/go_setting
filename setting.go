@@ -81,3 +81,7 @@ func Has(key string) bool {
 
 	return ok
 }
+
+func GetAll() map[string]interface{} {
+	return instance.data
+}
