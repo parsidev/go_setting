@@ -53,7 +53,7 @@ func Set(data map[string]interface{}) {
 	for key, value := range data {
 		instance.data[key] = value
 		s := new(models.Setting)
-		_ = instance.db.First(&s, "key = ?", key).Error
+		_ = instance.db.First(&s, "`key` = ?", key).Error
 
 		if !s.IsValid() {
 			_ = instance.db.Create(&models.Setting{Key: key, PlainValue: value}).Error
