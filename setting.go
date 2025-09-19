@@ -2,8 +2,12 @@ package go_setting
 
 import (
 	"database/sql"
-	"gitlab.aldy.ir/techteam/go_setting/models"
+	"errors"
+	"fmt"
+
 	"gorm.io/gorm"
+
+	"github.com/parsidev/go_setting/models"
 )
 
 var (
@@ -11,7 +15,7 @@ var (
 )
 
 type settingData struct {
-	data map[string]interface{}
+	data map[string]any
 	db   *gorm.DB
 }
 
@@ -28,7 +32,7 @@ func Init(db *gorm.DB) (err error) {
 		return err
 	}
 
-	instance = &settingData{data: make(map[string]interface{}), db: db}
+	instance = &settingData{data: make(map[string]any), db: db}
 
 	if !db.Migrator().HasTable(&models.Setting{}) {
 		if err = db.AutoMigrate(&models.Setting{}); err != nil {
@@ -49,14 +53,14 @@ func Init(db *gorm.DB) (err error) {
 	return nil
 }
 
-func Set(data map[string]interface{}) (err error){
+func Set(data map[string]any) (err error) {
 	for key, value := range data {
 		var s models.Setting
-		err = instance.db.First(&s, "`key` = ?", key).Error
+		err = instance.db.Where(fmt.Sprintf("%v.key = ?", models.Setting{}.TableName()), key).First(&s).Error
 
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			if err = instance.db.Create(&models.Setting{
-				Key:        key,
+				Key:       key,
 				PlainValue: value,
 			}).Error; err != nil {
 				return fmt.Errorf("failed to create setting '%s': %w", key, err)
@@ -69,12 +73,14 @@ func Set(data map[string]interface{}) (err error){
 		} else {
 			return fmt.Errorf("failed to fetch setting '%s': %w", key, err)
 		}
+
+		instance.data[key] = value
 	}
 
 	return nil
 }
 
-func Get(key string, def interface{}) (val interface{}) {
+func Get(key string, def any) (val any) {
 	var (
 		ok bool
 	)
@@ -94,6 +100,6 @@ func Has(key string) (bool, error) {
 	return true, nil
 }
 
-func GetAll() map[string]interface{} {
+func GetAll() map[string]any {
 	return instance.data
 }

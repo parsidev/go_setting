@@ -7,9 +7,9 @@ import (
 
 type Setting struct {
 	Base
-	Key        string      `json:"key"`
-	Value      string      `json:"value"`
-	PlainValue interface{} `json:"plain_value" gorm:"-:all"`
+	Key        string `json:"key"`
+	Value      string `json:"value"`
+	PlainValue any    `json:"plain_value" gorm:"-:all"`
 }
 
 func (s *Setting) AfterFind(tx *gorm.DB) error {
@@ -20,4 +20,8 @@ func (s *Setting) AfterFind(tx *gorm.DB) error {
 func (s *Setting) BeforeSave(tx *gorm.DB) error {
 	s.Value = serilizer.Serialize(s.PlainValue)
 	return nil
+}
+
+func (Setting) TableName() string {
+	return "settings"
 }
