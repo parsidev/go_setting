@@ -2,7 +2,7 @@ package go_setting
 
 import (
 	"database/sql"
-	"github.com/parsidev/go_setting/models"
+	"gitlab.aldy.ir/techteam/go_setting/models"
 	"gorm.io/gorm"
 )
 
@@ -49,19 +49,29 @@ func Init(db *gorm.DB) (err error) {
 	return nil
 }
 
-func Set(data map[string]interface{}) {
+func Set(data map[string]interface{}) (err error){
 	for key, value := range data {
-		instance.data[key] = value
-		s := new(models.Setting)
-		_ = instance.db.First(&s, "`key` = ?", key).Error
+		var s models.Setting
+		err = instance.db.First(&s, "`key` = ?", key).Error
 
-		if !s.IsValid() {
-			_ = instance.db.Create(&models.Setting{Key: key, PlainValue: value}).Error
-		} else {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			if err = instance.db.Create(&models.Setting{
+				Key:        key,
+				PlainValue: value,
+			}).Error; err != nil {
+				return fmt.Errorf("failed to create setting '%s': %w", key, err)
+			}
+		} else if err == nil {
 			s.PlainValue = value
-			_ = instance.db.Save(s).Error
+			if err = instance.db.Save(&s).Error; err != nil {
+				return fmt.Errorf("failed to update setting '%s': %w", key, err)
+			}
+		} else {
+			return fmt.Errorf("failed to fetch setting '%s': %w", key, err)
 		}
 	}
+
+	return nil
 }
 
 func Get(key string, def interface{}) (val interface{}) {
